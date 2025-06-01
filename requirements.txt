@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+pydantic
+neo4j
+gitpython
+python-dotenv
+openai
+qdrant-client[fastembed]
+networkx
+pytest
