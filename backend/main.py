@@ -33,6 +33,9 @@ app.add_middleware(
 )
 
 
+ANNOTATED_GRAPH_DIR = "indexed_graphs"
+os.makedirs(ANNOTATED_GRAPH_DIR, exist_ok=True)
+
 # ========== Models ==========
 class RepoRequest(BaseModel):
     repo_url: str
@@ -50,47 +53,109 @@ import asyncio
 import openai
 from backend.app.graph_builder import annotate_graph_async
 
+# @app.post("/upload-repo")
+# async def upload_repo(request: RepoRequest):
+#     openai_client = openai.AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"), timeout=600.0)
+#     repo_url = request.repo_url
+#     client = Neo4jClient(password="password")  # or from env
+#     try:
+
+#         if os.path.exists(f"{repo_url}_annotated_graph.pkl"):
+#             with open(f"{repo_url}_annotated_graph.pkl", "rb") as f:
+#                 G = pickle.load(f)
+            
+#             if G:
+#                 return {"status": "success", "message": "Repo already indexed and stored."}
+            
+#         # 1. Clone the repo locally
+#         repo_path = clone_repo(repo_url)
+        
+#         # 2. Build graph
+#         G = build_graph(repo_path)
+
+#         G = await annotate_graph_async(G, openai_client=openai_client)
+
+#         with open(f"{repo_url}_annotated_graph.pkl", "wb") as f:
+#             pickle.dump(G, f)
+#             print("✅ Annotated graph saved to annotated_graph.pkl")
+    
+
+#         # 3. Push graph to Neo4j
+#         client.push_graph_to_neo4j(G, repo_id=repo_url)
+#         client.close()
+
+#         # 4. Embed graph nodes
+#         node_embeddings = await embed_graph(G, openai_client=openai_client)
+
+#         print(f"Calling add_to_vector_store")
+#         # 5. Add to vector store
+#         add_to_vector_store(node_embeddings, G, repo_url)
+
+#         return {"status": "success", "message": "Repo indexed and stored."}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+
+import re
+
+def sanitize_repo_url(repo_url: str) -> str:
+    """
+    Turn a GitHub URL into a filesystem‐safe ID.
+    E.g. "https://github.com/foo/Bar-Baz.git" -> "Bar-Baz".
+    """
+    # Remove any trailing “.git”
+    name = repo_url.rstrip("/").split("/")[-1]
+    if name.endswith(".git"):
+        name = name[: -len(".git")]
+    # Optionally strip out any characters you consider unsafe,
+    # e.g. keep only alphanumerics, hyphens and underscores:
+    return re.sub(r"[^A-Za-z0-9_\-]", "_", name)
+
 @app.post("/upload-repo")
 async def upload_repo(request: RepoRequest):
     openai_client = openai.AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"), timeout=600.0)
     repo_url = request.repo_url
     client = Neo4jClient(password="password")  # or from env
-    try:
 
-        if os.path.exists("annotated_graph.pkl"):
-            with open("annotated_graph.pkl", "rb") as f:
+    # 1. Compute a safe filename for this repo
+    safe_repo_id = sanitize_repo_url(repo_url)
+    pickle_path = os.path.join(ANNOTATED_GRAPH_DIR, f"{safe_repo_id}_annotated_graph.pkl")
+
+    try:
+        # 2. If we already have that pickle on disk, just load and return
+        if os.path.exists(pickle_path):
+            with open(pickle_path, "rb") as f:
                 G = pickle.load(f)
-            
             if G:
+                print(f"Success, repo already indexed and stored")
                 return {"status": "success", "message": "Repo already indexed and stored."}
-            
-        # 1. Clone the repo locally
+
+        # 3. Otherwise, clone + build + annotate + save
         repo_path = clone_repo(repo_url)
-        
-        # 2. Build graph
         G = build_graph(repo_path)
 
         G = await annotate_graph_async(G, openai_client=openai_client)
 
-        with open("annotated_graph.pkl", "wb") as f:
+        # 4. Save the pickle under our safe path
+        with open(pickle_path, "wb") as f:
             pickle.dump(G, f)
-            print("✅ Annotated graph saved to annotated_graph.pkl")
-    
+            print(f"✅ Annotated graph saved to {pickle_path}")
 
-        # 3. Push graph to Neo4j
+        # 5. Push the graph to Neo4j (using the safe ID as the repo_id)
         client.push_graph_to_neo4j(G, repo_id=repo_url)
         client.close()
 
-        # 4. Embed graph nodes
+        # 6. Embed and add to vector store
         node_embeddings = await embed_graph(G, openai_client=openai_client)
-
-        print(f"Calling add_to_vector_store")
-        # 5. Add to vector store
         add_to_vector_store(node_embeddings, G, repo_url)
 
         return {"status": "success", "message": "Repo indexed and stored."}
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @app.post("/ask")
@@ -125,6 +190,3 @@ async def get_graph_stats():
         return get_graph_statistics()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-

@@ -205,6 +205,32 @@ class Neo4jClient:
 
         for node_id in node_ids:
             for path in self.get_neighbors(node_id, repo_id=repo_id, depth=max_depth):
+                print(f"Got path for node {node_id}")
+                indent=1
+                indent_str = " " * indent
+                
+                # Print nodes
+                print(f"\n{indent_str}=== Nodes in Path ===")
+                for i, node in enumerate(path.nodes):
+                    print(f"\n{indent_str}Node {i+1}:")
+                    print(f"{indent_str}  ID: {node.get('id', 'N/A')}")
+                    print(f"{indent_str}  Type: {node.get('type', 'N/A')}")
+                    print(f"{indent_str}  File: {node.get('file_path', 'N/A')}")
+                    if node.get('start_line') and node.get('end_line'):
+                        print(f"{indent_str}  Lines: {node.get('start_line')}-{node.get('end_line')}")
+                    if node.get('code'):
+                        code_preview = node['code'].strip().split('\n')[0][:100] + "..." if len(node['code']) > 100 else node['code'].strip()
+                        print(f"{indent_str}  Code Preview: {code_preview}")
+
+                # Print relationships
+                print(f"\n{indent_str}=== Relationships in Path ===")
+                for i, rel in enumerate(path.relationships):
+                    print(f"\n{indent_str}Relationship {i+1}:")
+                    print(f"{indent_str}  From: {rel.start_node.get('id', 'N/A')}")
+                    print(f"{indent_str}  To: {rel.end_node.get('id', 'N/A')}")
+                    print(f"{indent_str}  Type: {rel.get('type', 'N/A')}")
+
+
                 for node in path.nodes:
                     nid = node["id"]
                     if nid not in context_nodes:
@@ -228,6 +254,7 @@ class Neo4jClient:
                     context_nodes[src].setdefault("relationships", []).append(
                         {"target": dst, "type": rel_type}
                     )
+            break
 
         self.close()
         return list(context_nodes.values())

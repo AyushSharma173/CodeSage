@@ -34,7 +34,9 @@ def call_upload_repo_endpoint(repo_url: str):
 
 from collections import defaultdict
 
-if __name__ == "__main__":
+
+
+if __name__ == "__main__2":
     from backend.app.repo_handler import clone_repo
     from backend.app.graph_builder import build_graph, annotate_graph_async
     from backend.app.embedder import embed_graph
@@ -206,16 +208,21 @@ if __name__ == "__main__":
 
 
 
-if __name__ == "__main___":
-    response = call_ask_endpoint("How does plagirism checker repo function logic works?", "https://github.com/Kalebu/Plagiarism-checker-Python.git")
+# if __name__ == "__main___":
+#     response = call_ask_endpoint("How does plagirism checker repo function logic works?", "https://github.com/Kalebu/Plagiarism-checker-Python.git")
 
-    print(f"\n\n\n\n")
+#     print(f"\n\n\n\n")
 
-    print(f"Got {len(response['context'])} context nodes")
-    print(f"\n\n\n")
-    for context in response['context']:
-        print(context)
-        print(f"\n\n\n")
+#     print(f"Got {len(response['context'])} context nodes")
+#     print(f"\n\n\n")
+#     for context in response['context']:
+#         print(context)
+#         print(f"\n\n\n")
+
+
+
+
+
 
 
     # call_upload_repo_endpoint("https://github.com/Kalebu/Plagiarism-checker-Python.git")
