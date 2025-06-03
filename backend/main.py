@@ -53,50 +53,6 @@ import asyncio
 import openai
 from backend.app.graph_builder import annotate_graph_async
 
-# @app.post("/upload-repo")
-# async def upload_repo(request: RepoRequest):
-#     openai_client = openai.AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"), timeout=600.0)
-#     repo_url = request.repo_url
-#     client = Neo4jClient(password="password")  # or from env
-#     try:
-
-#         if os.path.exists(f"{repo_url}_annotated_graph.pkl"):
-#             with open(f"{repo_url}_annotated_graph.pkl", "rb") as f:
-#                 G = pickle.load(f)
-            
-#             if G:
-#                 return {"status": "success", "message": "Repo already indexed and stored."}
-            
-#         # 1. Clone the repo locally
-#         repo_path = clone_repo(repo_url)
-        
-#         # 2. Build graph
-#         G = build_graph(repo_path)
-
-#         G = await annotate_graph_async(G, openai_client=openai_client)
-
-#         with open(f"{repo_url}_annotated_graph.pkl", "wb") as f:
-#             pickle.dump(G, f)
-#             print("✅ Annotated graph saved to annotated_graph.pkl")
-    
-
-#         # 3. Push graph to Neo4j
-#         client.push_graph_to_neo4j(G, repo_id=repo_url)
-#         client.close()
-
-#         # 4. Embed graph nodes
-#         node_embeddings = await embed_graph(G, openai_client=openai_client)
-
-#         print(f"Calling add_to_vector_store")
-#         # 5. Add to vector store
-#         add_to_vector_store(node_embeddings, G, repo_url)
-
-#         return {"status": "success", "message": "Repo indexed and stored."}
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
-
-
 
 import re
 

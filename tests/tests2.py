@@ -101,5 +101,5 @@ if __name__ == "__main__":
     # 3. Call LLM to answer using graph context
     answer = answer_query_with_llm(question, graph_context)
 
-    # print(f"Answer: {answer}")
+    print(f"Answer: {answer}")
     
