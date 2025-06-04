@@ -1,4 +1,3 @@
-// src/App.jsx
 import { useState, useRef, useEffect } from "react";
 import { uploadRepo, askQuestion, getFullGraph } from "./api";
 import ReactMarkdown from "react-markdown";
@@ -43,7 +42,7 @@ export default function App() {
   // ─────────────────────────────────────────────────
   const [showGraph, setShowGraph] = useState(false);
 
-  // Preset dropdown/multi‐select options
+  // Preset dropdown/multi‐select options (unchanged)
   const strategyOptions = [
     { label: "Invokes Only", value: "invokes_only" },
     { label: "Shallow Contains Only", value: "shallow_contains" },
@@ -102,7 +101,7 @@ export default function App() {
   // 6a) “Preset: Try Requests Repo” handler
   // ─────────────────────────────────────────────────
   const handleTryRequests = async () => {
-    const presetUrl = "https://github.com/psf/requests.git";
+    const presetUrl = "https://github.com/psf/requests";
     try {
       await uploadRepo(presetUrl);
       setIsRepoSubmitted(true);
@@ -113,12 +112,24 @@ export default function App() {
   };
 
   // ─────────────────────────────────────────────────
-  // 7) “Ask” button handler
+  // 6b) “Preset: Try Pendulum Repo” handler
+  // ─────────────────────────────────────────────────
+  const handleTryPendulum = async () => {
+    const presetUrl = "https://github.com/sdispater/pendulum";
+    try {
+      await uploadRepo(presetUrl);
+      setIsRepoSubmitted(true);
+      setRepoId(presetUrl);
+    } catch (err) {
+      alert(err.message || "Failed to upload Pendulum repo");
+    }
+  };
+
+  // ─────────────────────────────────────────────────
+  // 7) “Ask” button handler (unchanged)
   // ─────────────────────────────────────────────────
   const handleAsk = async () => {
     if (!question.trim()) return;
-
-    // 7a) Append the user’s question to chatHistory
     const newHistory = [...chatHistory, { sender: "user", text: question }];
     setChatHistory(newHistory);
     setLoading(true);
@@ -139,7 +150,6 @@ export default function App() {
       };
       const res = await askQuestion(payload);
 
-      // 7b) Append the bot’s answer (this triggers auto‐scroll)
       setChatHistory([
         ...newHistory,
         { sender: "bot", text: res.answer, context: res.context },
@@ -155,7 +165,7 @@ export default function App() {
   };
 
   // ─────────────────────────────────────────────────
-  // 8) Helper for toggling multi‐select
+  // 8) Helper for toggling multi‐select (unchanged)
   // ─────────────────────────────────────────────────
   const toggleSelection = (value, currentArray, setArray) => {
     if (currentArray.includes(value)) {
@@ -166,7 +176,7 @@ export default function App() {
   };
 
   // ─────────────────────────────────────────────────
-  // 8a) “Reset to Home” handler (for clicking the header)
+  // 8a) “Reset to Home” handler (for clicking the header, unchanged)
   // ─────────────────────────────────────────────────
   const handleGoHome = () => {
     setIsRepoSubmitted(false);
@@ -174,7 +184,6 @@ export default function App() {
     setChatHistory([]);
     setRepoUrl("");
     setDocUrl("");
-    // Optionally reset hyperparameters if desired:
     setStrategy("invokes_only");
     setDepth(2);
     setEdgeTypes([]);
@@ -186,6 +195,7 @@ export default function App() {
 
   // ──────────────────────────────────────────────────
   // 9) RENDER
+  // ──────────────────────────────────────────────────
   return (
     <div className="app-root">
       {/* ── HEADER (fixed height) ── */}
@@ -197,25 +207,21 @@ export default function App() {
         CodeBase Agent
       </header>
 
-      {/* ── If repo not submitted, show “Home” form ── */}
+      {/* ── “HOME” (repo selector) ── */}
       {!isRepoSubmitted ? (
         <div className="home-container">
           <div className="home-card">
-            <h2 className="home-title">Index a GitHub Repo</h2>
+            <h2 className="home-title">Analyze a GitHub Repository</h2>
 
-            {/* ── PRESET BUTTON for “Requests” ── */}
+            {/* ── MAIN FORM: GitHub URL + Upload button ── */}
             <div className="home-field">
-              <button className="home-button" onClick={handleTryRequests}>
-                Try “Requests” Demo
-              </button>
-            </div>
-
-            {/* ── OR custom URL ── */}
-            <div className="home-field">
-              <label className="home-label">GitHub Repo URL</label>
+              <label className="home-label" htmlFor="repo-input">
+                Enter a GitHub Repo URL
+              </label>
               <input
+                id="repo-input"
                 type="text"
-                placeholder="https://github.com/owner/repo.git"
+                placeholder="https://github.com/owner/repo"
                 value={repoUrl}
                 onChange={(e) => setRepoUrl(e.target.value)}
                 className="home-input"
@@ -223,19 +229,44 @@ export default function App() {
             </div>
 
             <div className="home-field">
-              <label className="home-label">(Optional) Documentation URL</label>
+              <button className="home-button" onClick={handleRepoSubmit}>
+                Upload & Index Repo
+              </button>
+            </div>
+
+            {/* ── OPTIONAL DOC URL (smaller font, lighter color) ── */}
+            <div className="home-field">
+              <label className="home-label optional-label" htmlFor="doc-input">
+                (Optional) Documentation URL
+              </label>
               <input
+                id="doc-input"
                 type="text"
-                placeholder="https://some-doc-page.com"
+                placeholder="https://docs.example.com"
                 value={docUrl}
                 onChange={(e) => setDocUrl(e.target.value)}
-                className="home-input"
+                className="home-input optional-input"
               />
             </div>
 
-            <button className="home-button" onClick={handleRepoSubmit}>
-              Upload & Index Repo
-            </button>
+            {/* ── “Or try a demo repo” SECTION ── */}
+            <div className="demo-section">
+              <div className="demo-heading">Or try a demo repo:</div>
+              <div className="demo-buttons">
+                <button
+                  className="demo-button"
+                  onClick={handleTryRequests}
+                >
+                  psf/requests
+                </button>
+                <button
+                  className="demo-button"
+                  onClick={handleTryPendulum}
+                >
+                  sdispater/pendulum
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       ) : (
@@ -276,7 +307,6 @@ export default function App() {
 
             {/* ── CENTER: Chat Panel ── */}
             <main className="chat-main">
-              {/* Chat history */}
               <div ref={chatContainerRef} className="chat-history">
                 {chatHistory.map((msg, idx) => (
                   <div
@@ -293,7 +323,6 @@ export default function App() {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Input + Ask + Toggle Context Drawer */}
               <div className="chat-input-bar">
                 <input
                   type="text"
@@ -350,7 +379,9 @@ export default function App() {
       )}
 
       {/* ── Conditionally show the full-graph overlay ── */}
-      {showGraph && <GraphView repoId={repoId} onClose={() => setShowGraph(false)} />}
+      {showGraph && (
+        <GraphView repoId={repoId} onClose={() => setShowGraph(false)} />
+      )}
     </div>
   );
 }

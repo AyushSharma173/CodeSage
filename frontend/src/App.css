@@ -1,5 +1,3 @@
-/* src/App.css */
-
 /* ── Root container (fills full viewport) ── */
 .app-root {
   height: 100vh;
@@ -19,6 +17,7 @@
   font-size: 1.5rem;
   font-weight: 600;
   box-sizing: border-box;
+  user-select: none;
 }
 
 /* ── HOME (index‐repo) FORM ── */
@@ -34,33 +33,34 @@
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 24px;
-  max-width: 600px;
+  padding: 32px 24px;
+  max-width: 500px;
   width: 100%;
   box-sizing: border-box;
 }
 
 .home-title {
-  margin-bottom: 16px;
+  margin-bottom: 24px;
   color: #111827;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 600;
+  text-align: center;
 }
 
 .home-field {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .home-label {
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
   font-weight: 500;
   color: #374151;
 }
 
 .home-input {
   width: 100%;
-  padding: 12px;
+  padding: 10px 12px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 1rem;
@@ -77,6 +77,55 @@
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.home-button:hover {
+  background-color: #1e40af;
+}
+
+/* ── OPTIONAL DOC URL (smaller text, lighter border) ── */
+.optional-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.optional-input {
+  border: 1px solid #e5e7eb;
+}
+
+/* ── “Or try a demo repo” SECTION ── */
+.demo-section {
+  margin-top: 32px;
+  text-align: center;
+}
+
+.demo-heading {
+  color: #6b7280;
+  font-size: 0.95rem;
+  margin-bottom: 12px;
+}
+
+.demo-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.demo-button {
+  padding: 8px 16px;
+  background-color: transparent;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #374151;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.demo-button:hover {
+  background-color: #f3f4f6;
+  border-color: #cbd5e1;
 }
 
 /* ── “View Full Graph” BAR ── */
@@ -96,28 +145,32 @@
   border-radius: 6px;
   cursor: pointer;
   font-weight: 500;
+  transition: background-color 0.15s ease;
+}
+
+.graph-button:hover {
+  background-color: #059669;
 }
 
 /* ── CHAT CONTAINER ── */
 .chat-container {
   flex: 1;
   display: flex;
-  overflow: hidden; /* ensures only inner scrolls scroll */
+  overflow: hidden;
   position: relative;
 }
 
-/* ── CHAT PANEL ── */
 .chat-main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* only chat-history scrolls */
+  overflow: hidden;
 }
-/* ── Chat History (you probably already have overflow and padding) ── */
+
 .chat-history {
   flex: 1;
-  background-color: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
   border-radius: 10px;
   padding: 16px 16px 0;
   overflow-y: auto;
@@ -125,29 +178,25 @@
   box-sizing: border-box;
 }
 
-/* ── Each chat “wrapper” takes 100% of its row ── */
 .chat-bubble {
   width: 100%;
   margin-bottom: 12px;
   box-sizing: border-box;
 }
 
-/* ── Align a user bubble to the right ── */
 .bubble-user {
   display: flex;
   justify-content: flex-end;
 }
 
-/* ── Align a bot bubble to the left ── */
 .bubble-bot {
   display: flex;
   justify-content: flex-start;
 }
 
-/* ── The actual colored “pill” inside each bubble ── */
 .bubble-user > div,
 .bubble-bot > div {
-  color: #FFFFFF;
+  color: #ffffff;
   padding: 8px 12px;
   border-radius: 12px;
   max-width: 80%;
@@ -156,13 +205,12 @@
   box-sizing: border-box;
 }
 
-/* ── Different background for user vs. bot ── */
 .bubble-user > div {
-  background-color: #2563EB;
+  background-color: #2563eb;
 }
 
 .bubble-bot > div {
-  background-color: #4B5563;
+  background-color: #4b5563;
 }
 
 /* ── INPUT BAR (“Ask” button etc.) ── */
@@ -212,7 +260,7 @@
 }
 
 .context-button.btn-hide {
-  background-color: #ef4444; /* toggles red when open */
+  background-color: #ef4444;
 }
 
 /* ── BOTTOM DRAWER: Retrieved Context ── */
