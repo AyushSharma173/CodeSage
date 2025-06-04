@@ -1,4 +1,4 @@
-# CodeGraph – Build & Query Code‑Dependency Graphs with Neo4j + LLMs
+# CodeSage – Build & Query Code‑Dependency Graphs with Neo4j + LLMs
 
 > **Prototype status** – This is a research project, not a production‑ready service. It works on small‑to‑medium Python repos (e.g. `psf/requests`, `sdispater/pendulum`). PRs are welcome!
 
