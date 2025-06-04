@@ -1,6 +1,6 @@
 # CodeGraph – Build & Query Code‑Dependency Graphs with Neo4j + LLMs
 
-> **Prototype status** – This is a research/portfolio project, not a production‑ready service. It works on small‑to‑medium Python repos (e.g. `psf/requests`, `sdispater/pendulum`). PRs are welcome!
+> **Prototype status** – This is a research project, not a production‑ready service. It works on small‑to‑medium Python repos (e.g. `psf/requests`, `sdispater/pendulum`). PRs are welcome!
 
 ---
 
@@ -160,6 +160,52 @@ pytest tests/
 
 ---
 
+## 🔍 Retrieval & Graph‑Traversal Research
+
+CodeGraph isn’t just a pretty graph viz – it is an *experiment‑bench* for studying **how different traversal rules change the context we feed into an LLM** (and therefore the final answer quality).
+
+| Knob                    | UI control                                      | Backend param                                      | What it does & why it matters                                                                                                                        |
+| ----------------------- | ----------------------------------------------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Strategy**            | *drop‑down*                                     | `strategy`                                         | Pre‑baked templates (e.g. `invokes_only`, `deep_logic_chain`) that select edge types + max depth. Use them as reproducible baselines.                |
+| **Depth**               | *number input*                                  | `depth`                                            | BFS/DFS hop‑limit (1–5). Small = local reasoning; large = holistic context but slower + noisier.                                                     |
+| **Edge filters**        | *checkboxes*                                    | `edge_types`                                       | Limit traversal to `{contains, invokes, inherits, imports}`. Lets you ask: *“does keeping only dynamic `invokes` edges improve bug‑fix retrieval?”*. |
+| **Node‑type whitelist** | *checkboxes*                                    | `include_node_types`                               | Keep only `file`, `function`, … – handy to drop directories or generic files.                                                                        |
+| **Directionality**      | *directed* switch + *incoming/outgoing* toggles | `directed`, `include_incoming`, `include_outgoing` | Control flow vs. data flow vs. undirected exploration.                                                                                               |
+| **Vector search scope** | not in UI (CLI only)                            | `top_k`, `score > τ`                               | First step is ANN search in Qdrant; traversal is seeded from those `k` nodes.  A higher similarity threshold τ yields fewer but more on‑topic seeds. |
+
+### Example research questions
+
+* **RQ1 · Breadth vs. depth** – Does `depth=3` + `edge_types={invokes,inherits}` improve SWE‑Bench patch localisation vs. `depth=1`?  (Hypothesis: deeper chains capture multi‑hop utility functions.)
+* **RQ2 · Node granularity** – Compare answering accuracy when the context includes *only* `file` nodes vs. `file + function`.
+* **RQ3 · Directionality** – For debugging tasks (“why does X crash?”) incoming edges (callers) may matter more than outgoing ones.
+
+These knobs are exposed via FastAPI → try them with cURL / Postman or tweak the React sidebar.
+
+---
+
+## 📸 Screenshots
+
+Images live in `docs/assets/` (kept out of the NPM/webpack bundle).  If you clone the repo you may need to `git lfs install` if using large media.
+
+| View                              | File                                |
+| --------------------------------- | ----------------------------------- |
+| Landing page                      | `docs/assets/LandingPage.jpg`       |
+| Chat + retrieval settings sidebar | `docs/assets/ui_chat.png`           |
+| Full‑graph visualisation (GIF)    | `docs/assets/graph_anim.gif`        |
+| Retrieved‑context drawer          | `docs/assets/retreived_context.png` |
+
+```md
+![Landing page](docs/assets/LandingPage.jpg)
+
+![Chat & retrieval settings](docs/assets/ui_chat.png)
+
+![Full‑graph visualisation](docs/assets/graph_anim.gif)
+
+![Retrieved context drawer](docs/assets/retreived_context.png)
+```
+
+---
+
 ## 📝 Roadmap / Future work
 
 * Multi‑language static analysis (JavaScript, Java, Go)
@@ -188,5 +234,4 @@ MIT – see `LICENSE`.
 
 ## 🙏 Acknowledgements
 
-* Idea inspired by OpenAI’s code‑insights demo & Palantir’s code graph tooling.
 * Uses **OpenAI API**, **Neo4j Community Edition**, **Qdrant**, **NetworkX**, **React**.
