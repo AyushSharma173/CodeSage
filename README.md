@@ -194,7 +194,7 @@ Images live in `docs/assets/` (kept out of the NPM/webpack bundle).  If you clon
 | Full‑graph visualisation (GIF)    | `docs/assets/graph_anim.gif`        |
 | Retrieved‑context drawer          | `docs/assets/retreived_context.png` |
 
-```md
+<!-- ```md -->
 ![Landing page](docs/assets/LandingPage.jpg)
 
 ![Chat & retrieval settings](docs/assets/ui_chat.png)
@@ -202,7 +202,7 @@ Images live in `docs/assets/` (kept out of the NPM/webpack bundle).  If you clon
 ![Full‑graph visualisation](docs/assets/graph_anim.gif)
 
 ![Retrieved context drawer](docs/assets/retreived_context.png)
-```
+<!-- ``` -->
 
 ---
 
