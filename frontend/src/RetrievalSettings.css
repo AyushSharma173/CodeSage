@@ -1,0 +1,103 @@
+/* src/RetrievalSettings.css */
+
+/* ── Sidebar Container ── */
+.rs-aside {
+    width: 20%;
+    background-color: #ffffff;
+    border-right: 1px solid #e5e7eb;
+    padding: 24px;
+    overflow-y: auto;
+    box-sizing: border-box;
+  }
+  
+  /* ── Sidebar Title ── */
+  .rs-sidebar-title {
+    font-size: 1.125rem; /* 18px */
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 16px;
+  }
+  
+  /* ── Each Card (grouped section) ── */
+  .rs-card {
+    background-color: #f9fafb; /* slightly off-white */
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* ── Card Title (“General”, “Filters”, “Directionality”) ── */
+  .rs-card-title {
+    font-size: 1rem; /* 16px */
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 12px;
+  }
+  
+  /* ── A single field/row within a card ── */
+  .rs-field {
+    margin-bottom: 12px;
+  }
+  
+  /* ── Labels for inputs/dropdowns ── */
+  .rs-label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.95rem; /* 15px */
+    font-weight: 500;
+    color: #374151;
+  }
+  
+  /* ── Text inputs / number inputs ── */
+  .rs-input {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 0.95rem;
+    color: #111827;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    box-sizing: border-box;
+  }
+  
+  /* ── Select dropdowns ── */
+  .rs-select {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 0.95rem;
+    color: #111827;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background-color: #ffffff;
+    box-sizing: border-box;
+  }
+  
+  /* ── Container for checkbox‐lists (fixed max height with scroll) ── */
+  .rs-checkbox-list {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    max-height: 100px;
+    overflow-y: auto;
+    padding: 4px;
+  }
+  
+  /* ── Each item inside a checkbox list ── */
+  .rs-checkbox-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  
+  /* ── Checkbox label text ── */
+  .rs-checkbox-label {
+    font-size: 0.9rem; /* 14px */
+    color: #111827;
+  }
+  
+  /* ── For the three “Directionality” checkboxes which sit full‐width ── */
+  .rs-checkbox-item-full {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  

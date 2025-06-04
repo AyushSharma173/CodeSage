@@ -17,6 +17,7 @@ from backend.app.graph_builder import build_graph
 from backend.app.neo4j_client import Neo4jClient
 from backend.app.embedder import embed_graph
 from backend.app.vector_store import add_to_vector_store, search_similar_nodes
+from backend.app.vector_store import delete_all_vectors
 from backend.app.query_router import answer_query_with_llm
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -40,11 +41,30 @@ os.makedirs(ANNOTATED_GRAPH_DIR, exist_ok=True)
 class RepoRequest(BaseModel):
     repo_url: str
 
+# class QueryRequest(BaseModel):
+#     question: str
+#     top_k: int = 5
+#     repo_id: str
+#     strategy: Optional[str] = "invokes_only"  # 👈 add strategy with default
+
+
+
 class QueryRequest(BaseModel):
     question: str
     top_k: int = 5
     repo_id: str
-    strategy: Optional[str] = "invokes_only"  # 👈 add strategy with default
+
+    # Already had:
+    strategy: Optional[str] = "invokes_only"
+    depth: Optional[int] = 2
+
+    # New hyperparams:
+    edge_types: Optional[List[str]] = None
+    include_node_types: Optional[List[str]] = None
+    directed: Optional[bool] = True
+    include_incoming: Optional[bool] = True
+    include_outgoing: Optional[bool] = True
+
 
 # ========== Endpoints ==========
 
@@ -113,6 +133,18 @@ async def upload_repo(request: RepoRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/reset")
+async def reset():
+    delete_all_vectors()
+    client = Neo4jClient(password="password")
+    client.wipe_entire_database()
+    client.close()
+    # I want to delete all graphs in indexed_graphs
+    for file in os.listdir(ANNOTATED_GRAPH_DIR):
+        os.remove(os.path.join(ANNOTATED_GRAPH_DIR, file))
+    return {"status": "success", "message": "Reset complete."}
+
+
 
 @app.post("/ask")
 async def ask_question(req: QueryRequest):
@@ -125,7 +157,21 @@ async def ask_question(req: QueryRequest):
         # 2. Fetch neighbor nodes from Neo4j
         context_nodes = [r["node_id"] for r in results]
         print("[!] Context nodes:", context_nodes)
-        graph_context = client.query_neo4j_neighbors(context_nodes, repo_id=req.repo_id, depth=2, strategy=req.strategy or "invokes_only")
+        # graph_context = client.query_neo4j_neighbors(context_nodes, repo_id=req.repo_id, depth=2, strategy=req.strategy or "invokes_only")
+
+
+        graph_context = client.query_neo4j_neighbors(
+            node_ids=context_nodes,
+            repo_id=req.repo_id,
+            depth=req.depth,
+            strategy=req.strategy or "invokes_only",
+            edge_types=req.edge_types,
+            include_node_types=req.include_node_types,
+            directed=req.directed,
+            include_incoming=req.include_incoming,
+            include_outgoing=req.include_outgoing,
+        )
+
 
         # 3. Call LLM to answer using graph context
         answer = answer_query_with_llm(req.question, graph_context)
@@ -145,4 +191,54 @@ async def get_graph_stats():
         from app.neo4j_client import get_graph_statistics
         return get_graph_statistics()
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+
+@app.get("/graph/{repo_id:path}")
+async def get_full_graph(repo_id: str):
+    """
+    Return all CodeNode nodes and RELATION edges for a given repo_id,
+    so the frontend can render the entire graph.
+    """
+    try:
+        client = Neo4jClient(password=os.getenv("NEO4J_PASSWORD", "neo4j"))
+
+        # 1) Fetch all nodes for this repo_id
+        with client._driver.session() as sess:
+            nodes_raw = sess.run(
+                "MATCH (n:CodeNode {repo_id: $repo_id}) RETURN n",
+                repo_id=repo_id,
+            )
+            nodes = []
+            for record in nodes_raw:
+                n = record["n"]
+                nodes.append(
+                    {
+                        "id": n["id"],
+                        "type": n.get("type", ""),
+                        "file_path": n.get("file_path", ""),
+                        "start_line": n.get("start_line", None),
+                        "end_line": n.get("end_line", None),
+                        "summary": n.get("summary", ""),
+                    }
+                )
+
+        # 2) Fetch all edges for this repo_id
+        with client._driver.session() as sess:
+            edges_raw = sess.run(
+                "MATCH (a:CodeNode {repo_id: $repo_id})-[r:RELATION]->(b:CodeNode {repo_id: $repo_id}) "
+                "RETURN a.id AS source, b.id AS target, r.type AS type",
+                repo_id=repo_id,
+            )
+            edges = []
+            for record in edges_raw:
+                edges.append(
+                    {"source": record["source"], "target": record["target"], "type": record["type"]}
+                )
+
+        client.close()
+        return {"nodes": nodes, "edges": edges}
+    except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))

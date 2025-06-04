@@ -1,41 +1,267 @@
-#root {
-  margin: 0;
+/* src/App.css */
+
+/* ── Root container (fills full viewport) ── */
+.app-root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f9fafb;
+}
+
+/* ── HEADER ── */
+.app-header {
+  height: 64px;
+  background-color: #1f2937;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
+/* ── HOME (index‐repo) FORM ── */
+.home-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.home-card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  max-width: 600px;
   width: 100%;
-  text-align: center;
+  box-sizing: border-box;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.home-title {
+  margin-bottom: 16px;
+  color: #111827;
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.home-field {
+  margin-bottom: 12px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.home-label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 500;
+  color: #374151;
 }
 
-.card {
-  padding: 2em;
+.home-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  box-sizing: border-box;
 }
 
-.read-the-docs {
-  color: #888;
+.home-button {
+  width: 100%;
+  padding: 12px 0;
+  background-color: #2563eb;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* ── “View Full Graph” BAR ── */
+.graph-button-bar {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 8px 24px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.graph-button {
+  padding: 8px 16px;
+  background-color: #10b981;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* ── CHAT CONTAINER ── */
+.chat-container {
+  flex: 1;
+  display: flex;
+  overflow: hidden; /* ensures only inner scrolls scroll */
+  position: relative;
+}
+
+/* ── CHAT PANEL ── */
+.chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* only chat-history scrolls */
+}
+/* ── Chat History (you probably already have overflow and padding) ── */
+.chat-history {
+  flex: 1;
+  background-color: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  padding: 16px 16px 0;
+  overflow-y: auto;
+  margin-bottom: 16px;
+  box-sizing: border-box;
+}
+
+/* ── Each chat “wrapper” takes 100% of its row ── */
+.chat-bubble {
+  width: 100%;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+
+/* ── Align a user bubble to the right ── */
+.bubble-user {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ── Align a bot bubble to the left ── */
+.bubble-bot {
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* ── The actual colored “pill” inside each bubble ── */
+.bubble-user > div,
+.bubble-bot > div {
+  color: #FFFFFF;
+  padding: 8px 12px;
+  border-radius: 12px;
+  max-width: 80%;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  box-sizing: border-box;
+}
+
+/* ── Different background for user vs. bot ── */
+.bubble-user > div {
+  background-color: #2563EB;
+}
+
+.bubble-bot > div {
+  background-color: #4B5563;
+}
+
+/* ── INPUT BAR (“Ask” button etc.) ── */
+.chat-input-bar {
+  height: 56px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  background-color: #ffffff;
+  box-sizing: border-box;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.chat-button {
+  padding: 8px 16px;
+  background-color: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.chat-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.context-button {
+  padding: 8px 16px;
+  background-color: #10b981;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.context-button.btn-hide {
+  background-color: #ef4444; /* toggles red when open */
+}
+
+/* ── BOTTOM DRAWER: Retrieved Context ── */
+.context-drawer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background-color: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  transition: bottom 0.3s ease, height 0.3s ease;
+  overflow-y: auto;
+  border-radius: 10px 10px 0 0;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}
+
+.context-drawer.drawer-closed {
+  bottom: -300px;
+  height: 40px;
+}
+
+.context-drawer.drawer-open {
+  bottom: 0;
+  height: 300px;
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  cursor: pointer;
+  background-color: #ffffff;
+  box-sizing: border-box;
+}
+
+.drawer-title {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.drawer-icon {
+  font-size: 1.25rem;
+  color: #6b7280;
+}
+
+.drawer-content {
+  padding: 16px;
+  box-sizing: border-box;
 }

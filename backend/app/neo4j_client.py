@@ -361,6 +361,7 @@ from typing import Any, Iterable, Tuple
 
 import networkx as nx
 from neo4j import GraphDatabase, Session, Driver
+from typing import Optional, List
 
 __all__ = [
     "Neo4jClient",
@@ -540,26 +541,277 @@ class Neo4jClient:
         # ────────────────────────────────────────────────────────────────────────────────
 
 
+    # def query_neo4j_neighbors(
+    #     self,
+    #     node_ids: list[str],
+    #     repo_id: str,
+    #     depth: int = 2,
+    #     strategy: str = "default_bfs_all",
+    # ) -> list[dict]:
+    #     """
+    #     Return a list of node‐dicts, each containing its properties plus
+    #     only those outgoing relationships that match `rel_filters`. Also,
+    #     if rel_filters is non‐empty, we only include nodes that actually
+    #     participate in at least one of those filtered relationships.
+
+    #     Supported strategies:
+    #       - "invokes_only"         : only direct callers/callees (1‐hop on 'invokes')
+    #       - "shallow_contains"     : only seed + its immediate container (1‐hop on 'contains')
+    #       - "file_and_function_only": undirected BFS up to `depth`, but include only nodes of type 'file' or 'function'
+    #       - "deep_logic_chain"     : directed BFS up to 3 hops, following only 'invokes' or 'inherits'
+    #       - "class_hierarchy"      : directed BFS up to 2 hops, following only 'inherits'
+    #       - "default_bfs_all"      : undirected BFS up to `depth`, follow any edge type
+    #     """
+
+    #     def _make_node_entry(rec_node) -> dict:
+    #         nid = rec_node["id"]
+    #         return {
+    #             "node_id": nid,
+    #             "type": rec_node.get("type", "unknown"),
+    #             "code": rec_node.get("code", ""),
+    #             "file_path": rec_node.get("file_path", ""),
+    #             "start_line": rec_node.get("start_line"),
+    #             "end_line": rec_node.get("end_line"),
+    #             "relationships": [],
+    #         }
+
+    #     results: dict[str, dict] = {}
+    #     seen_edges: set[tuple[str, str, str]] = set()
+
+    #     # 1) "invokes_only": direct 1-hop on 'invokes'
+    #     if strategy == "invokes_only":
+    #         cypher = """
+    #         MATCH (n:CodeNode {id:$seed, repo_id:$repo_id})
+    #         OPTIONAL MATCH (n)-[r1:RELATION {type:'invokes'}]->(m)
+    #         OPTIONAL MATCH (m2)-[r2:RELATION {type:'invokes'}]->(n)
+    #         WHERE (m.repo_id = $repo_id OR m2.repo_id = $repo_id)
+    #         RETURN n, r1, m, r2, m2
+    #         """
+    #         for seed in node_ids:
+    #             with self._driver.session() as sess:
+    #                 for record in sess.run(cypher, seed=seed, repo_id=repo_id):
+    #                     # Ensure seed node is present
+    #                     n = record["n"]
+    #                     sid = n["id"]
+    #                     if sid not in results:
+    #                         results[sid] = _make_node_entry(n)
+
+    #                     # Outgoing "n -> m"
+    #                     if record["r1"] and record["m"]:
+    #                         m = record["m"]
+    #                         mid = m["id"]
+    #                         if mid not in results:
+    #                             results[mid] = _make_node_entry(m)
+    #                         edge_key = (sid, mid, "invokes")
+    #                         if edge_key not in seen_edges:
+    #                             seen_edges.add(edge_key)
+    #                             results[sid]["relationships"].append({"target": mid, "type": "invokes"})
+
+    #                     # Incoming "m2 -> n"
+    #                     if record["r2"] and record["m2"]:
+    #                         m2 = record["m2"]
+    #                         m2id = m2["id"]
+    #                         if m2id not in results:
+    #                             results[m2id] = _make_node_entry(m2)
+    #                         edge_key = (m2id, sid, "invokes")
+    #                         if edge_key not in seen_edges:
+    #                             seen_edges.add(edge_key)
+    #                             results[m2id]["relationships"].append({"target": sid, "type": "invokes"})
+    #         self.print_all_nodes(results)
+    #         self.close()
+    #         return list(results.values())
+
+    #     # 2) "shallow_contains": only seed + its immediate container (1-hop on 'contains')
+    #     if strategy == "shallow_contains":
+    #         cypher = """
+    #         MATCH (n:CodeNode {id:$seed, repo_id:$repo_id})
+    #         OPTIONAL MATCH (p)-[r:RELATION {type:'contains'}]->(n)
+    #         WHERE p.repo_id = $repo_id
+    #         RETURN n, r, p
+    #         """
+    #         for seed in node_ids:
+    #             with self._driver.session() as sess:
+    #                 for record in sess.run(cypher, seed=seed, repo_id=repo_id):
+    #                     n = record["n"]
+    #                     sid = n["id"]
+    #                     if sid not in results:
+    #                         results[sid] = _make_node_entry(n)
+
+    #                     if record["r"] and record["p"]:
+    #                         parent = record["p"]
+    #                         pid = parent["id"]
+    #                         if pid not in results:
+    #                             results[pid] = _make_node_entry(parent)
+
+    #                         edge_key = (pid, sid, "contains")
+    #                         if edge_key not in seen_edges:
+    #                             seen_edges.add(edge_key)
+    #                             results[pid]["relationships"].append({"target": sid, "type": "contains"})
+    #         self.print_all_nodes(results)
+    #         self.close()
+    #         return list(results.values())
+
+    #     # 3) "file_and_function_only": undirected BFS up to `depth`, but include only file/function nodes
+    #     if strategy == "file_and_function_only":
+    #         cypher = f"""
+    #         MATCH path = (n:CodeNode {{id:$seed, repo_id:$repo_id}})-[*1..{depth}]-()
+    #         WHERE ALL(x IN nodes(path) WHERE x.repo_id = $repo_id)
+    #         RETURN path
+    #         """
+    #         for seed in node_ids:
+    #             with self._driver.session() as sess:
+    #                 for rec in sess.run(cypher, seed=seed, repo_id=repo_id):
+    #                     path = rec["path"]
+
+    #                     # Mark only 'file' and 'function' nodes
+    #                     for node in path.nodes:
+    #                         if node.get("type") in {"file", "function"}:
+    #                             nid = node["id"]
+    #                             if nid not in results:
+    #                                 results[nid] = _make_node_entry(node)
+
+    #                     # Collect edges between allowed nodes
+    #                     for rel in path.relationships:
+    #                         src = rel.start_node["id"]
+    #                         dst = rel.end_node["id"]
+    #                         rtype = rel.get("type", "")
+    #                         if src in results and dst in results:
+    #                             edge_key = (src, dst, rtype)
+    #                             if edge_key not in seen_edges:
+    #                                 seen_edges.add(edge_key)
+    #                                 results[src]["relationships"].append({"target": dst, "type": rtype})
+    #         self.print_all_nodes(results)
+    #         self.close()
+    #         return list(results.values())
+
+    #     # 4) "deep_logic_chain": directed BFS up to 3 hops, follow only 'invokes' or 'inherits'
+    #     if strategy == "deep_logic_chain":
+    #         cypher = """
+    #         MATCH path = (n:CodeNode {id:$seed, repo_id:$repo_id})
+    #           -[r:RELATION*1..3]->(m)
+    #         WHERE ALL(x IN nodes(path) WHERE x.repo_id = $repo_id)
+    #           AND ALL(relEdge IN relationships(path)
+    #                   WHERE relEdge.type IN ['invokes','inherits'])
+    #         RETURN path
+    #         """
+    #         for seed in node_ids:
+    #             with self._driver.session() as sess:
+    #                 for rec in sess.run(cypher, seed=seed, repo_id=repo_id):
+    #                     path = rec["path"]
+
+    #                     # Include every node on this path
+    #                     for node in path.nodes:
+    #                         nid = node["id"]
+    #                         if nid not in results:
+    #                             results[nid] = _make_node_entry(node)
+
+    #                     # Include only 'invokes' or 'inherits' edges
+    #                     for rel in path.relationships:
+    #                         src = rel.start_node["id"]
+    #                         dst = rel.end_node["id"]
+    #                         rtype = rel.get("type", "")
+    #                         if rtype in {"invokes", "inherits"}:
+    #                             edge_key = (src, dst, rtype)
+    #                             if edge_key not in seen_edges:
+    #                                 seen_edges.add(edge_key)
+    #                                 results[src]["relationships"].append({"target": dst, "type": rtype})
+    #         self.print_all_nodes(results)
+    #         self.close()
+    #         return list(results.values())
+
+    #     # 5) "class_hierarchy": directed BFS up to 2 hops, follow only 'inherits'
+    #     if strategy == "class_hierarchy":
+    #         cypher = """
+    #         MATCH path = (n:CodeNode {id:$seed, repo_id:$repo_id})
+    #           -[r:RELATION*1..2]->(m)
+    #         WHERE ALL(x IN nodes(path) WHERE x.repo_id = $repo_id)
+    #           AND ALL(relEdge IN relationships(path)
+    #                   WHERE relEdge.type = 'inherits')
+    #         RETURN path
+    #         """
+    #         for seed in node_ids:
+    #             with self._driver.session() as sess:
+    #                 for rec in sess.run(cypher, seed=seed, repo_id=repo_id):
+    #                     path = rec["path"]
+
+    #                     # Include every node on this path
+    #                     for node in path.nodes:
+    #                         nid = node["id"]
+    #                         if nid not in results:
+    #                             results[nid] = _make_node_entry(node)
+
+    #                     # Include only 'inherits' edges
+    #                     for rel in path.relationships:
+    #                         src = rel.start_node["id"]
+    #                         dst = rel.end_node["id"]
+    #                         rtype = rel.get("type", "")
+    #                         if rtype == "inherits":
+    #                             edge_key = (src, dst, rtype)
+    #                             if edge_key not in seen_edges:
+    #                                 seen_edges.add(edge_key)
+    #                                 results[src]["relationships"].append({"target": dst, "type": rtype})
+
+
+    #         self.print_all_nodes(results)
+    #         self.close()
+    #         return list(results.values())
+
+    #     # 6) "default_bfs_all": undirected BFS up to `depth`, follow any edge type
+    #     cypher = f"""
+    #     MATCH path = (n:CodeNode {{id:$seed, repo_id:$repo_id}})-[*1..{depth}]-()
+    #     WHERE ALL(x IN nodes(path) WHERE x.repo_id = $repo_id)
+    #     RETURN path
+    #     """
+    #     for seed in node_ids:
+    #         with self._driver.session() as sess:
+    #             for rec in sess.run(cypher, seed=seed, repo_id=repo_id):
+    #                 path = rec["path"]
+
+    #                 # Include every node on each undirected path
+    #                 for node in path.nodes:
+    #                     nid = node["id"]
+    #                     if nid not in results:
+    #                         results[nid] = _make_node_entry(node)
+
+    #                 # Include all edges we see between included nodes
+    #                 for rel in path.relationships:
+    #                     src = rel.start_node["id"]
+    #                     dst = rel.end_node["id"]
+    #                     rtype = rel.get("type", "")
+    #                     edge_key = (src, dst, rtype)
+    #                     if edge_key not in seen_edges:
+    #                         seen_edges.add(edge_key)
+    #                         results[src]["relationships"].append({"target": dst, "type": rtype})
+
+    #     self.print_all_nodes(results)
+
+    #     self.close()
+    #     return list(results.values())
+
+
+
+    
+
+
     def query_neo4j_neighbors(
         self,
         node_ids: list[str],
         repo_id: str,
         depth: int = 2,
         strategy: str = "default_bfs_all",
+        edge_types: Optional[List[str]] = None,
+        include_node_types: Optional[List[str]] = None,
+        directed: bool = True,
+        include_incoming: bool = True,
+        include_outgoing: bool = True,
     ) -> list[dict]:
         """
         Return a list of node‐dicts, each containing its properties plus
-        only those outgoing relationships that match `rel_filters`. Also,
-        if rel_filters is non‐empty, we only include nodes that actually
-        participate in at least one of those filtered relationships.
+        only those outgoing (and/or incoming) relationships that match `edge_types`.
+        If include_node_types is provided, we only keep nodes whose `type` is in that list.
 
-        Supported strategies:
-          - "invokes_only"         : only direct callers/callees (1‐hop on 'invokes')
-          - "shallow_contains"     : only seed + its immediate container (1‐hop on 'contains')
-          - "file_and_function_only": undirected BFS up to `depth`, but include only nodes of type 'file' or 'function'
-          - "deep_logic_chain"     : directed BFS up to 3 hops, following only 'invokes' or 'inherits'
-          - "class_hierarchy"      : directed BFS up to 2 hops, following only 'inherits'
-          - "default_bfs_all"      : undirected BFS up to `depth`, follow any edge type
+        The old `strategy`‐strings ("invokes_only", etc.) are still supported,
+        but if `edge_types` is provided it will override them.
         """
 
         def _make_node_entry(rec_node) -> dict:
@@ -577,7 +829,52 @@ class Neo4jClient:
         results: dict[str, dict] = {}
         seen_edges: set[tuple[str, str, str]] = set()
 
-        # 1) "invokes_only": direct 1-hop on 'invokes'
+        # If the caller explicitly passed edge_types, it overrides `strategy`
+        if edge_types:
+            # Build a Cypher that follows only those `edge_types`
+            edge_list = ", ".join(f"'{et}'" for et in edge_types)
+            direction = "->" if directed else "-"
+            hop_pattern = f"[r:RELATION*1..{depth}]{direction}"
+            cypher = (
+                f"MATCH path = (seed:CodeNode {{id:$seed, repo_id:$repo_id}})-{hop_pattern}(x)\n"
+                f"WHERE ALL(n IN nodes(path) WHERE n.repo_id = $repo_id)\n"
+                f"  AND ALL(e IN relationships(path) WHERE e.type IN [{edge_list}])\n"
+                f"RETURN path"
+            )
+            for seed in node_ids:
+                with self._driver.session() as sess:
+                    for rec in sess.run(cypher, seed=seed, repo_id=repo_id):
+                        path = rec["path"]
+                        # Collect all nodes and edges that match
+                        for node in path.nodes:
+                            nid = node["id"]
+                            ntype = node.get("type", "")
+                            # If include_node_types is set, skip nodes not in that list
+                            if include_node_types and ntype not in include_node_types:
+                                continue
+                            if nid not in results:
+                                results[nid] = _make_node_entry(node)
+
+                        for rel in path.relationships:
+                            src = rel.start_node["id"]
+                            dst = rel.end_node["id"]
+                            rtype = rel.get("type", "")
+                            if rtype not in edge_types:
+                                continue
+                            # Only add edges if both endpoints survive the node‐type filter
+                            if src in results and dst in results:
+                                edge_key = (src, dst, rtype)
+                                if edge_key not in seen_edges:
+                                    seen_edges.add(edge_key)
+                                    results[src]["relationships"].append({"target": dst, "type": rtype})
+
+            self.close()
+            return list(results.values())
+
+        # Otherwise, fall back to the original `strategy` logic:
+        # ─────────────────────────────────────────────────────────────────────
+
+        # 1) invokes_only
         if strategy == "invokes_only":
             cypher = """
             MATCH (n:CodeNode {id:$seed, repo_id:$repo_id})
@@ -589,38 +886,49 @@ class Neo4jClient:
             for seed in node_ids:
                 with self._driver.session() as sess:
                     for record in sess.run(cypher, seed=seed, repo_id=repo_id):
-                        # Ensure seed node is present
+                        # Seed node
                         n = record["n"]
                         sid = n["id"]
+                        # If node‐type filtering is requested, apply it here:
+                        if include_node_types and n.get("type") not in include_node_types:
+                            # skip adding this seed if it fails the type filter
+                            continue
                         if sid not in results:
                             results[sid] = _make_node_entry(n)
 
-                        # Outgoing "n -> m"
+                        # Outgoing invokes: n -> m
                         if record["r1"] and record["m"]:
                             m = record["m"]
                             mid = m["id"]
-                            if mid not in results:
-                                results[mid] = _make_node_entry(m)
-                            edge_key = (sid, mid, "invokes")
-                            if edge_key not in seen_edges:
-                                seen_edges.add(edge_key)
-                                results[sid]["relationships"].append({"target": mid, "type": "invokes"})
+                            if include_node_types and m.get("type") not in include_node_types:
+                                pass
+                            else:
+                                if mid not in results:
+                                    results[mid] = _make_node_entry(m)
+                                # Add edge n->m only if both sides survived node‐type filter
+                                edge_key = (sid, mid, "invokes")
+                                if edge_key not in seen_edges:
+                                    seen_edges.add(edge_key)
+                                    results[sid]["relationships"].append({"target": mid, "type": "invokes"})
 
-                        # Incoming "m2 -> n"
-                        if record["r2"] and record["m2"]:
+                        # Incoming invokes: m2 -> n
+                        if include_incoming and record["r2"] and record["m2"]:
                             m2 = record["m2"]
                             m2id = m2["id"]
-                            if m2id not in results:
-                                results[m2id] = _make_node_entry(m2)
-                            edge_key = (m2id, sid, "invokes")
-                            if edge_key not in seen_edges:
-                                seen_edges.add(edge_key)
-                                results[m2id]["relationships"].append({"target": sid, "type": "invokes"})
-            self.print_all_nodes(results)
+                            if include_node_types and m2.get("type") not in include_node_types:
+                                pass
+                            else:
+                                if m2id not in results:
+                                    results[m2id] = _make_node_entry(m2)
+                                edge_key = (m2id, sid, "invokes")
+                                if edge_key not in seen_edges:
+                                    seen_edges.add(edge_key)
+                                    results[m2id]["relationships"].append({"target": sid, "type": "invokes"})
+
             self.close()
             return list(results.values())
 
-        # 2) "shallow_contains": only seed + its immediate container (1-hop on 'contains')
+        # 2) shallow_contains
         if strategy == "shallow_contains":
             cypher = """
             MATCH (n:CodeNode {id:$seed, repo_id:$repo_id})
@@ -633,28 +941,32 @@ class Neo4jClient:
                     for record in sess.run(cypher, seed=seed, repo_id=repo_id):
                         n = record["n"]
                         sid = n["id"]
+                        if include_node_types and n.get("type") not in include_node_types:
+                            continue
                         if sid not in results:
                             results[sid] = _make_node_entry(n)
 
-                        if record["r"] and record["p"]:
+                        if include_outgoing and record["r"] and record["p"]:
                             parent = record["p"]
                             pid = parent["id"]
-                            if pid not in results:
-                                results[pid] = _make_node_entry(parent)
+                            if include_node_types and parent.get("type") not in include_node_types:
+                                pass
+                            else:
+                                if pid not in results:
+                                    results[pid] = _make_node_entry(parent)
+                                edge_key = (pid, sid, "contains")
+                                if edge_key not in seen_edges:
+                                    seen_edges.add(edge_key)
+                                    results[pid]["relationships"].append({"target": sid, "type": "contains"})
 
-                            edge_key = (pid, sid, "contains")
-                            if edge_key not in seen_edges:
-                                seen_edges.add(edge_key)
-                                results[pid]["relationships"].append({"target": sid, "type": "contains"})
-            self.print_all_nodes(results)
             self.close()
             return list(results.values())
 
-        # 3) "file_and_function_only": undirected BFS up to `depth`, but include only file/function nodes
+        # 3) file_and_function_only
         if strategy == "file_and_function_only":
             cypher = f"""
-            MATCH path = (n:CodeNode {{id:$seed, repo_id:$repo_id}})-[*1..{depth}]-()
-            WHERE ALL(x IN nodes(path) WHERE x.repo_id = $repo_id)
+            MATCH path = (n:CodeNode {{id:$seed, repo_id:$repo_id}})-[*1..{depth}]-(x)
+            WHERE ALL(node IN nodes(path) WHERE node.repo_id = $repo_id)
             RETURN path
             """
             for seed in node_ids:
@@ -662,35 +974,38 @@ class Neo4jClient:
                     for rec in sess.run(cypher, seed=seed, repo_id=repo_id):
                         path = rec["path"]
 
-                        # Mark only 'file' and 'function' nodes
+                        # Node‐type filter to only keep nodes of type 'file' or 'function'
                         for node in path.nodes:
                             if node.get("type") in {"file", "function"}:
                                 nid = node["id"]
+                                if include_node_types and node.get("type") not in include_node_types:
+                                    continue
                                 if nid not in results:
                                     results[nid] = _make_node_entry(node)
 
-                        # Collect edges between allowed nodes
+                        # Collect edges between kept nodes
                         for rel in path.relationships:
                             src = rel.start_node["id"]
                             dst = rel.end_node["id"]
                             rtype = rel.get("type", "")
+                            # Only add if both endpoints survived the node‐type filter
                             if src in results and dst in results:
                                 edge_key = (src, dst, rtype)
                                 if edge_key not in seen_edges:
                                     seen_edges.add(edge_key)
                                     results[src]["relationships"].append({"target": dst, "type": rtype})
-            self.print_all_nodes(results)
+
             self.close()
             return list(results.values())
 
-        # 4) "deep_logic_chain": directed BFS up to 3 hops, follow only 'invokes' or 'inherits'
+        # 4) deep_logic_chain
         if strategy == "deep_logic_chain":
-            cypher = """
-            MATCH path = (n:CodeNode {id:$seed, repo_id:$repo_id})
-              -[r:RELATION*1..3]->(m)
+            # Replace 3 hops with the user‐provided `depth`, if desired:
+            cypher = f"""
+            MATCH path = (n:CodeNode {{id:$seed, repo_id:$repo_id}})
+            -[r:RELATION*1..{depth}]->(m)
             WHERE ALL(x IN nodes(path) WHERE x.repo_id = $repo_id)
-              AND ALL(relEdge IN relationships(path)
-                      WHERE relEdge.type IN ['invokes','inherits'])
+            AND ALL(relEdge IN relationships(path) WHERE relEdge.type IN ['invokes','inherits'])
             RETURN path
             """
             for seed in node_ids:
@@ -698,34 +1013,37 @@ class Neo4jClient:
                     for rec in sess.run(cypher, seed=seed, repo_id=repo_id):
                         path = rec["path"]
 
-                        # Include every node on this path
+                        # Keep every node on this path (unless a node‐type filter rejects it)
                         for node in path.nodes:
                             nid = node["id"]
+                            if include_node_types and node.get("type") not in include_node_types:
+                                continue
                             if nid not in results:
                                 results[nid] = _make_node_entry(node)
 
-                        # Include only 'invokes' or 'inherits' edges
+                        # Only add 'invokes' or 'inherits' edges
                         for rel in path.relationships:
                             src = rel.start_node["id"]
                             dst = rel.end_node["id"]
                             rtype = rel.get("type", "")
                             if rtype in {"invokes", "inherits"}:
-                                edge_key = (src, dst, rtype)
-                                if edge_key not in seen_edges:
-                                    seen_edges.add(edge_key)
-                                    results[src]["relationships"].append({"target": dst, "type": rtype})
-            self.print_all_nodes(results)
+                                # only if both endpoints survived the node‐type filter
+                                if src in results and dst in results:
+                                    edge_key = (src, dst, rtype)
+                                    if edge_key not in seen_edges:
+                                        seen_edges.add(edge_key)
+                                        results[src]["relationships"].append({"target": dst, "type": rtype})
+
             self.close()
             return list(results.values())
 
-        # 5) "class_hierarchy": directed BFS up to 2 hops, follow only 'inherits'
+        # 5) class_hierarchy
         if strategy == "class_hierarchy":
-            cypher = """
-            MATCH path = (n:CodeNode {id:$seed, repo_id:$repo_id})
-              -[r:RELATION*1..2]->(m)
+            cypher = f"""
+            MATCH path = (n:CodeNode {{id:$seed, repo_id:$repo_id}})
+            -[r:RELATION*1..{depth}]->(m)
             WHERE ALL(x IN nodes(path) WHERE x.repo_id = $repo_id)
-              AND ALL(relEdge IN relationships(path)
-                      WHERE relEdge.type = 'inherits')
+            AND ALL(relEdge IN relationships(path) WHERE relEdge.type = 'inherits')
             RETURN path
             """
             for seed in node_ids:
@@ -733,32 +1051,31 @@ class Neo4jClient:
                     for rec in sess.run(cypher, seed=seed, repo_id=repo_id):
                         path = rec["path"]
 
-                        # Include every node on this path
                         for node in path.nodes:
                             nid = node["id"]
+                            if include_node_types and node.get("type") not in include_node_types:
+                                continue
                             if nid not in results:
                                 results[nid] = _make_node_entry(node)
 
-                        # Include only 'inherits' edges
                         for rel in path.relationships:
                             src = rel.start_node["id"]
                             dst = rel.end_node["id"]
                             rtype = rel.get("type", "")
-                            if rtype == "inherits":
+                            if rtype == "inherits" and src in results and dst in results:
                                 edge_key = (src, dst, rtype)
                                 if edge_key not in seen_edges:
                                     seen_edges.add(edge_key)
                                     results[src]["relationships"].append({"target": dst, "type": rtype})
 
-
-            self.print_all_nodes(results)
             self.close()
             return list(results.values())
 
-        # 6) "default_bfs_all": undirected BFS up to `depth`, follow any edge type
+        # 6) default_bfs_all
+        # (fall back to a plain undirected BFS of up to `depth`, any relationship)
         cypher = f"""
-        MATCH path = (n:CodeNode {{id:$seed, repo_id:$repo_id}})-[*1..{depth}]-()
-        WHERE ALL(x IN nodes(path) WHERE x.repo_id = $repo_id)
+        MATCH path = (n:CodeNode {{id:$seed, repo_id:$repo_id}})-[*1..{depth}]-(x)
+        WHERE ALL(node IN nodes(path) WHERE node.repo_id = $repo_id)
         RETURN path
         """
         for seed in node_ids:
@@ -766,23 +1083,24 @@ class Neo4jClient:
                 for rec in sess.run(cypher, seed=seed, repo_id=repo_id):
                     path = rec["path"]
 
-                    # Include every node on each undirected path
+                    # Include every node (unless node‐type filtering rejects it)
                     for node in path.nodes:
                         nid = node["id"]
+                        if include_node_types and node.get("type") not in include_node_types:
+                            continue
                         if nid not in results:
                             results[nid] = _make_node_entry(node)
 
-                    # Include all edges we see between included nodes
+                    # Include every edge between kept nodes
                     for rel in path.relationships:
                         src = rel.start_node["id"]
                         dst = rel.end_node["id"]
                         rtype = rel.get("type", "")
-                        edge_key = (src, dst, rtype)
-                        if edge_key not in seen_edges:
-                            seen_edges.add(edge_key)
-                            results[src]["relationships"].append({"target": dst, "type": rtype})
-
-        self.print_all_nodes(results)
+                        if src in results and dst in results:
+                            edge_key = (src, dst, rtype)
+                            if edge_key not in seen_edges:
+                                seen_edges.add(edge_key)
+                                results[src]["relationships"].append({"target": dst, "type": rtype})
 
         self.close()
         return list(results.values())
