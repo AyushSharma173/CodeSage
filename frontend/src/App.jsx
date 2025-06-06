@@ -1,3 +1,4 @@
+// frontend/src/App.jsx
 import { useState, useRef, useEffect } from "react";
 import { uploadRepo, askQuestion, getFullGraph } from "./api";
 import ReactMarkdown from "react-markdown";

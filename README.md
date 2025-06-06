@@ -1,4 +1,6 @@
 # CodeSage – Build & Query Code‑Dependency Graphs with Neo4j + LLMs
+[![📄 Read the Paper](https://img.shields.io/badge/Paper-PDF-blue?style=for-the-badge&logo=read-the-docs)](http://paper.codesage.com.s3-website.us-east-2.amazonaws.com/)
+
 
 > **Prototype status** – This is a research project, not a production‑ready service. It works on small‑to‑medium Python repos (e.g. `psf/requests`, `sdispater/pendulum`). PRs are welcome!
 

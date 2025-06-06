@@ -1,3 +1,4 @@
+# backend/app/embedder.py
 from openai import OpenAI
 import networkx as nx
 import os
@@ -8,43 +9,6 @@ load_dotenv()
 
 # Create a single OpenAI client instance
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))  # Set your key in env vars or explicitly
-
-
-# def embed_graph(G: nx.MultiDiGraph, model: str = "text-embedding-3-small") -> dict:
-#     """
-#     Given a graph `G`, compute OpenAI embeddings for each node.
-#     Returns a dictionary mapping node ID -> embedding vector (list of floats).
-#     """
-#     embeddings = {}
-
-#     for node_id, data in G.nodes(data=True):
-#         node_type = data.get("type", "unknown")
-#         summary = data.get("summary", "").strip()
-#         code = data.get("code", "").strip()
-#         file_path = data.get("file_path", "")
-#         start_line = data.get("start_line", "")
-#         end_line = data.get("end_line", "")
-
-#         # Prefer concise summary if available, fallback to code and metadata
-#         if summary:
-#             input_text = f"Node ID: {node_id}\nType: {node_type}\nFile: {file_path}\nSummary:\n{summary}"
-#         else:
-#             input_text = (
-#                 f"Node ID: {node_id}\nType: {node_type}\nFile: {file_path}\n"
-#                 f"Code:\n{code}\nLines: {start_line}-{end_line}"
-#             )
-
-
-#         try:
-#             response = client.embeddings.create(
-#                 input=input_text,
-#                 model=model
-#             )
-#             embeddings[node_id] = response.data[0].embedding
-#         except Exception as e:
-#             print(f"[!] Embedding failed for node {node_id}: {e}")
-
-#     return embeddings
 
 
 import tiktoken
